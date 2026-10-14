@@ -3,15 +3,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
-import { site } from "@/data/projects";
-export function Wordmark() {
-  return (
-    <span className="wordmark">
-      {site.name}
-      <span className="brand-dot" />
-    </span>
-  );
-}
+import { site } from "@/data/site";
+import { Wordmark } from "./Wordmark";
+
+const links = [
+  { href: "/#main", name: "Home" },
+  { href: "/projects/", name: "Projects" },
+  { href: "/#about", name: "About" },
+  { href: "/#contact", name: "Contact" },
+];
+
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -29,18 +30,15 @@ export function Navbar() {
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, []);
-  const links = [
-    { href: "/#main", name: "Home" },
-    { href: "/projects/", name: "Projects" },
-    { href: "/#about", name: "About" },
-    { href: "/#contact", name: "Contact" },
-  ];
+  const isActive = (name: string) =>
+    (name === "Home" && pathname === "/") ||
+    (name === "Projects" && pathname.startsWith("/projects"));
   return (
     <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
       <div className="nav-inner">
         <Link
           href="/#main"
-          aria-label="forgeD home"
+          aria-label={`${site.name} home`}
           onClick={() => setOpen(false)}
         >
           <Wordmark />
@@ -50,12 +48,7 @@ export function Navbar() {
             <Link
               key={l.name}
               href={l.href}
-              className={
-                (l.name === "Home" && pathname === "/") ||
-                (l.name === "Projects" && pathname.startsWith("/projects"))
-                  ? "active"
-                  : ""
-              }
+              className={isActive(l.name) ? "active" : ""}
             >
               {l.name}
             </Link>
@@ -88,19 +81,5 @@ export function Navbar() {
         ))}
       </nav>
     </header>
-  );
-}
-export function Footer() {
-  return (
-    <footer className="footer container">
-      <Link href="/" aria-label="forgeD home">
-        <Wordmark />
-      </Link>
-      <span>Thoughtfully designed. Carefully built.</span>
-      <a href="#main">
-        Back to top <ArrowUpRight size={14} />
-      </a>
-      <small>© {new Date().getFullYear()} forgeD</small>
-    </footer>
   );
 }

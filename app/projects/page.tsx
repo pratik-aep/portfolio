@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/projects";
-import { ProjectCard } from "@/components/Projects";
+import { ProjectCard } from "@/components/projects/ProjectCard";
 export const metadata: Metadata = { title: "Projects" };
 export default function ProjectsPage() {
   return (

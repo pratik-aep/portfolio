@@ -16,6 +16,10 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 110px;
 }
+/* Lenis drives smooth scrolling; native smoothing would fight it. */
+html.lenis {
+  scroll-behavior: auto;
+}
 body {
   margin: 0;
   background: #fff;
@@ -348,6 +352,66 @@ p {
 .canvas-wrap canvas {
   display: block;
   touch-action: pan-y !important;
+  transition: opacity 0.8s ease;
+}
+.canvas-wrap:not(.is-ready) canvas {
+  opacity: 0;
+}
+.scene-heading {
+  will-change: opacity, transform;
+}
+.scene-chapters {
+  position: absolute;
+  left: 56px;
+  bottom: 78px;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+  min-width: 260px;
+  height: 44px;
+}
+.scene-chapters li {
+  position: absolute;
+  inset: 0 auto auto 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.scene-chapters li span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.17em;
+  color: #8c8c91;
+}
+.scene-chapters li.is-active {
+  opacity: 1;
+  transform: none;
+}
+.scene-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--line);
+  z-index: 2;
+}
+.scene-progress span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform-origin: left;
+  transform: scaleX(0);
 }
 .scene-floor {
   position: absolute;
@@ -1146,6 +1210,13 @@ p {
     bottom: 26px;
     font-size: 6px;
     gap: 16px;
+  }
+  .scene-chapters {
+    left: 20px;
+    bottom: 76px;
+  }
+  .scene-chapters li {
+    font-size: 13px;
   }
   .scene-project-label {
     max-width: 115px;

@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { ArrowUpRight, Download, Check } from "lucide-react";
-import { site } from "@/data/projects";
-export default function Contact() {
+import { site } from "@/data/site";
+export function ContactSection() {
   const [service, setService] = useState("Website");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

@@ -1,13 +1,11 @@
-export const site = {
-  name: "forgeD",
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "",
-};
+import { asset } from "@/lib/asset";
+
 export const projects = [
   {
     slug: "lake-monitoring",
     title: "Lake Monitoring System",
     category: "IoT & data",
-    image: "/previews/lake.svg",
+    image: asset("/previews/lake.svg"),
     description:
       "An IoT-powered water quality monitoring platform with real-time sensor data and interactive visualizations.",
     short: "Making the invisible visible.",
@@ -23,7 +21,7 @@ export const projects = [
     slug: "antarctic-route-planner",
     title: "Antarctic Route Planner",
     category: "Geospatial",
-    image: "/previews/antarctic.svg",
+    image: asset("/previews/antarctic.svg"),
     description:
       "An intelligent routing platform designed to visualize environmental conditions and plan safer routes across Antarctic waters.",
     short: "A clearer path through complexity.",
@@ -39,7 +37,7 @@ export const projects = [
     slug: "exoplanet-classifier",
     title: "NASA Exoplanet Classifier",
     category: "Machine learning",
-    image: "/previews/space.svg",
+    image: asset("/previews/space.svg"),
     description:
       "A machine learning application built to analyze planetary data and classify exoplanet candidates.",
     short: "Finding patterns beyond our world.",
@@ -55,7 +53,7 @@ export const projects = [
     slug: "medical-simulation",
     title: "3D Medical Simulation",
     category: "Interactive 3D",
-    image: "/previews/medical.svg",
+    image: asset("/previews/medical.svg"),
     description:
       "An interactive 3D visualization experience designed to make anatomical exploration more immersive.",
     short: "A new perspective on learning.",

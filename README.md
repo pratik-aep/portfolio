@@ -1,65 +1,102 @@
 # forgeD portfolio
 
-A complete light-themed software development portfolio built from the supplied prompt and reference. The original prompt and design review are in the parent folder.
+[![CI/CD](https://github.com/pratik-aep/portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/pratik-aep/portfolio/actions/workflows/ci.yml)
+
+A light-themed portfolio for a software development team, centred on a scroll-driven 3D laptop. Built from the brief and design review in [`docs/`](docs/).
+
+**Live site:** https://pratik-aep.github.io/portfolio/
 
 ## Run locally
 
-Requires Node.js 20.9 or newer.
+Requires Node.js 20.9 or newer (`.nvmrc` pins 22).
 
 ```sh
 npm ci
 npm run dev -- --port 3107
 ```
 
-Open `http://localhost:3107`. The port avoids another application already running on 3000 in the original workspace.
+Open `http://localhost:3107`.
 
-```sh
-npm run typecheck
-npm run build
+| Script                 | What it does                                              |
+| ---------------------- | --------------------------------------------------------- |
+| `npm run dev`          | Development server with hot reload.                       |
+| `npm run build`        | Static export to `out/`.                                  |
+| `npm run lint`         | ESLint (Next.js core-web-vitals + TypeScript rules).      |
+| `npm run format`       | Format everything with Prettier.                          |
+| `npm run format:check` | Fail if anything is unformatted.                          |
+| `npm run typecheck`    | `tsc --noEmit`.                                           |
+| `npm run check`        | Everything CI runs: lint, format check, typecheck, build. |
+| `npm run assets`       | Regenerate the preview SVGs in `public/previews/`.        |
+
+The build is a static export. Serve `out/` through an HTTP server (e.g. `npx serve out`); opening the HTML from disk breaks client routing.
+
+## Architecture
+
+```
+app/                      Routes only (App Router)
+  layout.tsx              Fonts, global CSS, smooth scroll, nav, footer
+  page.tsx                Home: composes the sections below
+  projects/               /projects/ and statically generated detail pages
+  globals.css             Design tokens, layout, responsive rules
+components/
+  layout/                 Navbar, Footer, Wordmark
+  home/                   HeroSection, FeaturedProjects, AboutSection
+  laptop/                 The 3D scroll showcase (see below)
+  projects/               ProjectCard
+  contact/                ContactSection (brief download / email draft)
+  motion/                 Reveal (scroll reveals), SmoothScroll (Lenis)
+data/                     site.ts (brand, contact), projects.ts (content)
+hooks/                    usePrefersReducedMotion
+lib/                      asset() base-path helper, monotone spline, Lenis handle
+public/previews/          Generated SVG interfaces (cards + laptop screens)
+scripts/                  Preview artwork generator
+docs/                     Original brief, design review, visual reference
 ```
 
-The production build statically exports to `out/`. Serve that folder through an HTTP server; opening the HTML directly from disk does not support client routing or asset loading correctly.
+### The laptop showcase (`components/laptop/`)
 
-## What is implemented
+| File                       | Responsibility                                                                            |
+| -------------------------- | ----------------------------------------------------------------------------------------- |
+| `LaptopShowcaseLoader.tsx` | Client-only lazy import, so three.js is not in the initial bundle.                        |
+| `LaptopShowcase.tsx`       | The section: ScrollTrigger progress, pointer, breakpoints, overlays, fallbacks.           |
+| `LaptopScene.tsx`          | Lighting, contact shadow, and the per-frame loop (damping, banking, float, pointer lean). |
+| `LaptopModel.tsx`          | Geometry and materials only; animated through refs.                                       |
+| `LaptopScreen.tsx`         | Screen shader: project crossfades, power-on, glass sheen.                                 |
+| `choreography.ts`          | Keyframes per channel and responsive motion profiles.                                     |
+| `Keyboard.tsx`             | Keys merged into a single geometry.                                                       |
+| `StaticLaptop.tsx`         | CSS fallback for reduced motion and devices without WebGL2.                               |
+| `SceneBoundary.tsx`        | Error boundary that switches to the fallback.                                             |
 
-- Next.js App Router, TypeScript, React, Tailwind CSS, locally bundled Inter, GSAP/ScrollTrigger, Three.js, React Three Fiber, Drei, and Lucide.
-- A centered hero, sticky desktop/mobile navigation, and restrained entrance reveals.
-- One modeled laptop with screen, base, bezel, camera, hinge, keyboard, trackpad, speakers, and ports.
-- A five-phase native-scroll timeline animating position, depth, scale, pitch, yaw, roll, lighting, and project-screen crossfades. Reverse scrolling reverses the sequence.
-- A 340vh desktop scene and adapted 250vh mobile scene. The canvas renders on demand, caps DPR at 1.6, and loads as the scene approaches.
-- System reduced-motion support, a visitor motion control, and a non-WebGL fallback.
-- Four featured cards with the portfolio button beneath them; `/projects/` and four statically generated detail routes.
-- About and Contact sections, keyboard focus treatment, a skip link, mobile navigation with Escape dismissal, and local form validation.
-- A functional local project-brief download. With a verified contact email configured, it opens a prepared email draft instead.
+Scroll writes into a ref, the render loop reads it, and DOM overlays update from an `onFrame` callback. Scrolling never triggers a React render. To retime the animation, edit the keyframes in `choreography.ts`. Each channel (position, rotation, scale, lid, screen) has its own keys and is interpolated with a monotone cubic spline, so motion stays continuous without overshooting.
+
+## CI/CD
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every pull request and every push to `main`:
+
+1. **verify**: lint, format check, typecheck.
+2. **build**: static export with the GitHub Pages base path (`/portfolio`).
+3. **deploy** (`main` only): publishes `out/` to GitHub Pages.
+
+PR runs are cancelled when superseded; deployments are queued, never cancelled. Dependabot opens grouped weekly npm updates and monthly Actions updates.
+
+### One-time setup
+
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.** The deploy job fails until this is set.
+2. Optional: **Settings → Secrets and variables → Actions → Variables**, add `NEXT_PUBLIC_CONTACT_EMAIL` to turn the contact form into an email draft.
+3. Recommended: protect `main` and require the **Lint, format, typecheck** and **Build static site** checks.
+
+### Base path
+
+GitHub Pages serves this repository from `/portfolio`. `next.config.ts` reads `PAGES_BASE_PATH` (set by CI, empty locally). Next prefixes links automatically, but not `<Image>` sources, metadata icons, or WebGL texture URLs, so reference anything in `public/` through `asset("/path")` from `lib/asset.ts`.
 
 ## Content to confirm before public launch
 
-`data/projects.ts` contains the brand, draft project descriptions, project categories, and image paths. No actual project repositories, technology stacks, screenshots, deployment URLs, or contact email were supplied.
+`data/projects.ts` holds draft project descriptions, categories, and image paths. No project repositories, technology stacks, screenshots, deployment URLs, or contact email were supplied.
 
-The four preview SVGs are original **illustrative interfaces**, visibly labeled as concept previews. Detail pages also explain their status. Their sample readings are artwork, not verified project measurements. Replace these with authentic project screenshots when available. Project tags describe categories rather than claiming unverified implementation technologies.
+The four preview SVGs are original **illustrative interfaces**, visibly labelled as concept previews, and detail pages explain their status. Their sample readings are artwork, not real measurements. Replace them with authentic screenshots when available. Tags describe categories, not unverified technologies.
 
-Set `NEXT_PUBLIC_CONTACT_EMAIL` in `.env.local` or your build environment and rebuild when a verified address is available. The form never claims to send a message; without an address, it only downloads a text brief on the visitor's device.
+Without `NEXT_PUBLIC_CONTACT_EMAIL`, the contact form downloads a text brief on the visitor's device and never claims to have sent anything.
 
 Do not publish invented testimonials, client logos, statistics, repository links, or project outcomes.
 
-## Asset and component locations
-
-| Location | Purpose |
-| --- | --- |
-| `components/LaptopExperience.tsx` | Model geometry, screen shader, scroll choreography, reduced-motion and WebGL fallbacks. |
-| `components/Home.tsx` | Hero and homepage section composition. |
-| `components/Projects.tsx` | Reusable project cards and featured section. |
-| `components/Contact.tsx` | Brief builder and optional email-draft action. |
-| `components/Layout.tsx` | Wordmark, navigation, mobile menu, footer. |
-| `components/Motion.tsx` | Scroll reveals with motion preference handling and cleanup. |
-| `app/globals.css` | Visual tokens, layout, interaction styling, and responsive rules. |
-| `data/projects.ts` | Shared project and site metadata. |
-| `scripts/create-previews.mjs` | Reproducible original preview artwork (`npm run assets`). |
-| `public/previews/` | Four generated SVG interfaces; also used as laptop textures. |
-| `.openai/hosting.json` | Sites identity and static export directory. |
-
-## Deployment
-
-The site uses a static export because the requested portfolio does not require a server, database, or message delivery service. The hosting manifest declares `out/`; every project detail page is generated at build time. Source and assets are packaged with the Sites workflow, with access private by default.
-
-The site needs no external font requests, HDR downloads, model downloads, stock imagery, or external API calls at runtime.
+The site makes no external requests at runtime: fonts, lighting, and imagery are all bundled.
