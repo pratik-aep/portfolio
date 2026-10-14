@@ -7,7 +7,7 @@ export const LaptopShowcaseLoader = dynamic(() => import("./LaptopShowcase"), {
   ssr: false,
   loading: () => (
     <div
-      className="scene-placeholder"
+      className="showcase-placeholder"
       aria-label="Loading interactive showcase"
     />
   ),

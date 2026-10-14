@@ -1,0 +1,43 @@
+/* Design tokens. Every colour, size and spacing value in the site resolves
+   to one of these. */
+:root {
+  /* Colour */
+  --bg: #ffffff;
+  --bg-soft: #f8f9fa;
+  --ink: #111111;
+  --text: #666666;
+  --muted: #929292;
+  --line: #e8e8e8;
+  --line-strong: #d4d4d4;
+  --focus: #3d6f66;
+
+  /* Type: fluid between a 375px and a 1440px viewport */
+  --fs-hero: clamp(44px, 1.6rem + 5.4vw, 96px);
+  --fs-statement: clamp(36px, 1.2rem + 4vw, 76px);
+  --fs-h2: clamp(34px, 1.3rem + 2.6vw, 58px);
+  --fs-h3: clamp(20px, 1rem + 0.5vw, 26px);
+  --fs-body: clamp(15px, 0.85rem + 0.2vw, 17px);
+  --fs-small: 13px;
+  --fs-eyebrow: 11px;
+  --tracking-tight: -0.045em;
+  --tracking-display: -0.055em;
+
+  /* Space */
+  --gutter: clamp(20px, 4vw, 56px);
+  --content: 1320px;
+  --section: clamp(80px, 8vw, 120px);
+  --radius: 18px;
+  --radius-sm: 10px;
+  --nav-height: 76px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --nav-height: 64px;
+    --radius: 14px;
+  }
+}

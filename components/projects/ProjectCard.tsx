@@ -12,35 +12,38 @@ export function ProjectCard({
   index: number;
 }) {
   return (
-    <Reveal>
-      <Link href={`/projects/${project.slug}/`} className="project-card">
-        <div className="project-image">
+    <Reveal className="project-card-wrap">
+      <Link
+        href={`/projects/${project.slug}/`}
+        className="project-card"
+        aria-label={`${project.title}: view project`}
+      >
+        <div className="project-media">
           <Image
             src={project.image}
             alt={`Illustrative interface for ${project.title}`}
             width={1200}
             height={750}
+            sizes="(max-width: 767px) 100vw, (max-width: 1320px) 50vw, 640px"
           />
           <span className="preview-note">Concept preview</span>
-          <span className="image-arrow">
-            <ArrowUpRight size={21} />
-          </span>
         </div>
-        <div className="card-body">
-          <div className="card-meta">
-            <span>0{index + 1}</span>
-            <span>{project.category}</span>
+        <div className="project-body">
+          <div className="project-meta">
+            <span>
+              {String(index + 1).padStart(2, "0")} · {project.category}
+            </span>
+            <span className="project-arrow" aria-hidden>
+              <ArrowUpRight size={18} strokeWidth={1.75} />
+            </span>
           </div>
           <h3>{project.title}</h3>
           <p>{project.description}</p>
-          <div className="card-bottom">
-            <div className="tags">
-              {project.tags.map((t) => (
-                <span key={t}>{t}</span>
-              ))}
-            </div>
-            <ArrowUpRight size={17} />
-          </div>
+          <ul className="tags" aria-label="Technologies">
+            {project.tags.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
         </div>
       </Link>
     </Reveal>

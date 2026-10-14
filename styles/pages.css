@@ -1,0 +1,137 @@
+/* Secondary routes: /projects/, project detail, 404. */
+.projects-page {
+  padding-top: calc(var(--nav-height) + clamp(56px, 7vw, 100px));
+  padding-bottom: var(--section);
+}
+.page-heading {
+  text-align: center;
+}
+.page-heading h1 {
+  margin-top: 18px;
+  font-size: var(--fs-statement);
+}
+.page-heading p {
+  max-width: 560px;
+  margin: 24px auto 0;
+}
+.collection-end {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: clamp(56px, 6vw, 88px);
+  padding-top: 36px;
+  border-top: 1px solid var(--line);
+}
+.collection-end p {
+  font-size: clamp(24px, 1.2rem + 1vw, 32px);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+
+.detail-page {
+  padding-top: calc(var(--nav-height) + 48px);
+  padding-bottom: var(--section);
+}
+.back-link {
+  border: 0;
+  font-size: 14px;
+  color: var(--text);
+}
+.detail-heading {
+  padding: clamp(32px, 4vw, 56px) 0;
+}
+.detail-heading h1 {
+  margin-top: 16px;
+  font-size: var(--fs-statement);
+}
+.detail-heading p {
+  margin-top: 18px;
+  font-size: clamp(17px, 1rem + 0.3vw, 20px);
+}
+.detail-heading .tags {
+  margin-top: 24px;
+}
+.detail-preview {
+  padding: clamp(20px, 5vw, 64px) clamp(16px, 8vw, 120px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+.detail-preview img {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.2);
+}
+.detail-description {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 7vw, 112px);
+  padding: clamp(48px, 6vw, 80px) 0;
+}
+.detail-description h2 {
+  margin-top: 16px;
+  font-size: var(--fs-h2);
+}
+.detail-description ul {
+  margin: 24px 0;
+  padding: 0;
+  list-style: none;
+}
+.detail-description li {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+.detail-description li::before {
+  content: "↗";
+  margin-right: 14px;
+  color: var(--muted);
+}
+.asset-disclosure {
+  margin-top: 28px;
+  padding-left: 16px;
+  border-left: 2px solid var(--line-strong);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.next-project {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 36px;
+  border-top: 1px solid var(--line);
+}
+.next-project h3 {
+  margin-top: 10px;
+  font-size: clamp(22px, 1.1rem + 0.8vw, 28px);
+}
+.next-project .button {
+  flex-shrink: 0;
+}
+
+.not-found {
+  min-height: 80svh;
+  padding-top: calc(var(--nav-height) + 120px);
+}
+.not-found h1 {
+  margin-top: 18px;
+  font-size: var(--fs-statement);
+}
+.not-found p {
+  margin: 24px 0;
+}
+
+@media (max-width: 767px) {
+  .collection-end,
+  .next-project {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .detail-description {
+    grid-template-columns: 1fr;
+  }
+}

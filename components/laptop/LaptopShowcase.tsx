@@ -7,12 +7,19 @@ import { projects } from "@/data/projects";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { getLenis } from "@/lib/lenis";
 import { smoothstep } from "@/lib/monotone-spline";
-import { profileFor } from "./choreography";
+import { PHASES, phaseAt, profileFor, type Profile } from "./choreography";
 import { LaptopScene, type SceneDriver, type SceneFrame } from "./LaptopScene";
 import { SceneBoundary } from "./SceneBoundary";
 import { StaticLaptop } from "./StaticLaptop";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Editorial callouts, each visible for part of the story.
+const CALLOUTS = [
+  { text: "From idea to interface", from: 0.17, to: 0.35, side: "right" },
+  { text: "Designed in three dimensions", from: 0.38, to: 0.58, side: "left" },
+  { text: "Engineered to the detail", from: 0.62, to: 0.84, side: "left" },
+] as const;
 
 function supportsWebGL2() {
   try {
@@ -22,23 +29,35 @@ function supportsWebGL2() {
   }
 }
 
+const sameProfile = (a: Profile, b: Profile) =>
+  a.travel === b.travel && a.scale === b.scale && a.turn === b.turn;
+
 /**
- * The scroll-scrubbed laptop section. Client-only: loaded through
+ * The pinned, scroll-scrubbed laptop story. Client-only: loaded through
  * LaptopShowcaseLoader so three.js stays out of the initial bundle.
+ *
+ * One ScrollTrigger is the single source of progress. The render loop reads
+ * it, smooths it, and reports each frame back through `onFrame`, which
+ * drives the DOM overlays without React renders.
  */
 export default function LaptopShowcase() {
   const root = useRef<HTMLElement>(null);
-  const heading = useRef<HTMLDivElement>(null);
+  const markers = useRef<HTMLOListElement>(null);
+  const callouts = useRef<HTMLDivElement>(null);
+  const numeral = useRef<HTMLSpanElement>(null);
+  const trail = useRef<SVGPathElement>(null);
   const chapters = useRef<HTMLOListElement>(null);
   const bar = useRef<HTMLSpanElement>(null);
-  const [profile, setProfile] = useState(() => profileFor(window.innerWidth));
+  const [profile, setProfile] = useState(() =>
+    profileFor(window.innerWidth, window.innerHeight),
+  );
   const driver = useRef<SceneDriver>({
     progress: 0,
     pointer: { x: 0, y: 0 },
     profile,
   });
   // Last values written to the overlays, to skip redundant DOM writes.
-  const overlay = useRef({ heading: -1, chapter: -1 });
+  const overlay = useRef({ phase: -2, chapter: -2, callouts: "", exit: -1 });
   const [ready, setReady] = useState(false);
   const onReady = useCallback(() => setReady(true), []);
   const [active, setActive] = useState(false);
@@ -52,13 +71,21 @@ export default function LaptopShowcase() {
   // Overlays follow the rendered (smoothed) motion, not raw scroll.
   const onFrame = useCallback(({ progress, power, screen }: SceneFrame) => {
     const last = overlay.current;
-    const headingOpacity = Math.round(
-      (1 - smoothstep(0.06, 0.2, progress)) * 100,
-    );
-    if (heading.current && headingOpacity !== last.heading) {
-      last.heading = headingOpacity;
-      heading.current.style.opacity = String(headingOpacity / 100);
-      heading.current.style.transform = `translateY(${(headingOpacity - 100) * 0.35}px)`;
+    const phase = phaseAt(progress);
+    if (phase !== last.phase) {
+      last.phase = phase;
+      markers.current
+        ?.querySelectorAll("li")
+        .forEach((el, i) => el.classList.toggle("is-active", i === phase));
+      if (numeral.current) numeral.current.textContent = PHASES[phase].id;
+    }
+    const shown = CALLOUTS.map((c) => progress >= c.from && progress < c.to);
+    const key = shown.join();
+    if (key !== last.callouts && callouts.current) {
+      last.callouts = key;
+      Array.from(callouts.current.children).forEach((el, i) =>
+        el.classList.toggle("is-visible", shown[i]),
+      );
     }
     const chapter = power < 0.5 ? -1 : Math.round(screen);
     if (chapters.current && chapter !== last.chapter) {
@@ -67,13 +94,23 @@ export default function LaptopShowcase() {
         el.classList.toggle("is-active", i === chapter),
       );
     }
+    // Exit: overlays clear away and the laptop dims slightly as the
+    // featured work takes over. CSS reads --exit (0→1).
+    const exit = Math.round(smoothstep(0.88, 0.99, progress) * 100);
+    if (root.current && exit !== last.exit) {
+      last.exit = exit;
+      root.current.style.setProperty("--exit", String(exit / 100));
+    }
+    if (trail.current)
+      trail.current.style.strokeDashoffset = String(1 - progress);
     if (bar.current)
       bar.current.style.transform = `scaleX(${progress.toFixed(4)})`;
   }, []);
 
   useEffect(() => {
     const resize = () => {
-      const next = profileFor(window.innerWidth);
+      const next = profileFor(window.innerWidth, window.innerHeight);
+      if (sameProfile(next, driver.current.profile)) return;
       driver.current.profile = next;
       setProfile(next);
     };
@@ -115,10 +152,13 @@ export default function LaptopShowcase() {
     const sync = (self: ScrollTrigger) => {
       driver.current.progress = self.progress;
     };
+    // Starts while the scene is still rising into view, so the laptop is
+    // already arriving as the hero leaves: no empty pinned frame.
     const trigger = ScrollTrigger.create({
       trigger: root.current,
-      start: "top 35%",
+      start: "top 50%",
       end: "bottom bottom",
+      invalidateOnRefresh: true,
       onUpdate: sync,
       onRefresh: sync,
     });
@@ -138,71 +178,122 @@ export default function LaptopShowcase() {
     <section
       id="experience"
       ref={root}
-      className={`laptop-experience ${simplified ? "simplified-scene" : ""}`}
+      className={`showcase ${simplified ? "is-simplified" : ""}`}
       aria-label="Scroll-controlled 3D laptop showcase"
     >
-      <div className="scene-sticky">
-        <div className="scene-heading" ref={heading}>
-          <span className="eyebrow">BUILT TO MAKE AN IMPACT</span>
-          <h2>Ideas take shape.</h2>
-          <p>A little imagination. A lot of engineering.</p>
-        </div>
-        <div
-          className={`canvas-wrap ${ready ? "is-ready" : ""}`}
-          aria-hidden={!simplified}
-        >
-          {simplified ? (
-            <StaticLaptop />
-          ) : active ? (
-            <SceneBoundary onFailure={() => setFallback(true)}>
-              <Canvas
-                dpr={[1, 1.75]}
-                frameloop={visible ? "always" : "never"}
-                camera={{ position: [0, 1.3, 11], fov: 40 }}
-                gl={{
-                  alpha: true,
-                  antialias: true,
-                  powerPreference: "high-performance",
-                  toneMappingExposure: 1.05,
-                }}
-                onCreated={({ gl }) => {
-                  gl.domElement.addEventListener(
-                    "webglcontextlost",
-                    () => {
-                      if (gl.domElement.isConnected) setFallback(true);
-                    },
-                    { once: true },
-                  );
-                }}
-                fallback={<StaticLaptop />}
+      <div className="showcase-sticky">
+        <div className="showcase-stage">
+          {!simplified && (
+            <>
+              <span className="showcase-numeral" ref={numeral} aria-hidden>
+                01
+              </span>
+              <svg
+                className="showcase-trail"
+                viewBox="0 0 1440 900"
+                preserveAspectRatio="none"
+                aria-hidden
               >
-                <Suspense fallback={null}>
-                  <LaptopScene
-                    driver={driver}
-                    profile={profile}
-                    onReady={onReady}
-                    onFrame={onFrame}
-                  />
-                </Suspense>
-              </Canvas>
-            </SceneBoundary>
-          ) : null}
+                <path
+                  className="trail-guide"
+                  d="M-40 840 C 240 760, 420 330, 720 300 S 1180 360, 1150 470 S 820 640, 720 560"
+                />
+                <path
+                  ref={trail}
+                  pathLength={1}
+                  className="trail-draw"
+                  d="M-40 840 C 240 760, 420 330, 720 300 S 1180 360, 1150 470 S 820 640, 720 560"
+                />
+                <ellipse
+                  className="trail-orbit"
+                  cx="720"
+                  cy="520"
+                  rx="520"
+                  ry="150"
+                />
+              </svg>
+            </>
+          )}
+          <div
+            className={`showcase-canvas ${ready ? "is-ready" : ""}`}
+            aria-hidden={!simplified}
+          >
+            {simplified ? (
+              <StaticLaptop />
+            ) : active ? (
+              <SceneBoundary onFailure={() => setFallback(true)}>
+                <Canvas
+                  dpr={[1, 1.75]}
+                  frameloop={visible ? "always" : "never"}
+                  camera={{ position: [0, 1.5, 15], fov: 30 }}
+                  gl={{
+                    alpha: true,
+                    antialias: true,
+                    powerPreference: "high-performance",
+                    toneMappingExposure: 1.05,
+                  }}
+                  onCreated={({ gl, camera }) => {
+                    // A slight downward look keeps the keyboard readable.
+                    camera.lookAt(0, 0.2, 0);
+                    gl.domElement.addEventListener(
+                      "webglcontextlost",
+                      () => {
+                        if (gl.domElement.isConnected) setFallback(true);
+                      },
+                      { once: true },
+                    );
+                  }}
+                  fallback={<StaticLaptop />}
+                >
+                  <Suspense fallback={null}>
+                    <LaptopScene
+                      driver={driver}
+                      profile={profile}
+                      onReady={onReady}
+                      onFrame={onFrame}
+                    />
+                  </Suspense>
+                </Canvas>
+              </SceneBoundary>
+            ) : null}
+          </div>
+          {!simplified && (
+            <>
+              <div className="showcase-callouts" ref={callouts} aria-hidden>
+                {CALLOUTS.map((c) => (
+                  <span key={c.text} className={`callout callout-${c.side}`}>
+                    {c.text}
+                  </span>
+                ))}
+              </div>
+              <ol className="showcase-markers" ref={markers} aria-hidden>
+                {PHASES.map((p) => (
+                  <li key={p.id}>
+                    <span>{p.id}</span>
+                    {p.name}
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
         </div>
-        {simplified && <div className="scene-floor" />}
-        {!simplified && (
-          <ol className="scene-chapters" ref={chapters} aria-hidden="true">
-            {projects.map((p, i) => (
-              <li key={p.slug}>
-                <span>
-                  0{i + 1} / 0{projects.length}
-                </span>
-                {p.title}
-              </li>
-            ))}
-          </ol>
-        )}
-        <div className="scene-bottom">
-          <span>ONE IDEA. ENDLESS POSSIBILITIES.</span>
+        <div className="showcase-footer">
+          {simplified ? (
+            <span className="showcase-note">
+              Project interfaces · concept previews
+            </span>
+          ) : (
+            <ol className="showcase-chapters" ref={chapters} aria-hidden>
+              {projects.map((p, i) => (
+                <li key={p.slug}>
+                  <span>
+                    0{i + 1} / 0{projects.length}
+                  </span>
+                  {p.title}
+                </li>
+              ))}
+            </ol>
+          )}
           <button
             type="button"
             className="motion-toggle"
@@ -211,12 +302,12 @@ export default function LaptopShowcase() {
           >
             {reduced ? "Enable motion" : "Reduce motion"}
           </button>
-          <span className="scene-project-label">
-            PROJECT INTERFACES · CONCEPT PREVIEWS
-          </span>
+          {!simplified && (
+            <span className="showcase-note">Concept previews</span>
+          )}
         </div>
         {!simplified && (
-          <div className="scene-progress" aria-hidden="true">
+          <div className="showcase-progress" aria-hidden>
             <span ref={bar} />
           </div>
         )}

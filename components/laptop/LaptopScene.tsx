@@ -4,7 +4,13 @@ import { useFrame } from "@react-three/fiber";
 import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { clampAbs, smoothstep } from "@/lib/monotone-spline";
-import { FINAL, createPose, evaluatePose, type Profile } from "./choreography";
+import {
+  FINAL,
+  FINAL_SCALE,
+  createPose,
+  evaluatePose,
+  type Profile,
+} from "./choreography";
 import { LaptopModel } from "./LaptopModel";
 
 /** Inputs written by the DOM side, read every frame. */
@@ -52,7 +58,7 @@ export function LaptopScene({
     py: 0,
     first: true,
   });
-  const compact = profile.scale < 0.6;
+  const compact = profile.scale < 0.7;
   useEffect(() => {
     onReady();
   }, [onReady]);
@@ -113,7 +119,7 @@ export function LaptopScene({
           smoothstep(0.62, 0.86, s.p) *
           (1 - smoothstep(0.93, 1, s.p) * 0.6) *
           0.32;
-      shadow.current.position.y = FINAL.y - 1.8 * profile.scale;
+      shadow.current.position.y = FINAL.y - 1.78 * FINAL_SCALE * profile.scale;
     }
     onFrame({ progress: s.p, power: pose.power, screen: pose.screen });
   });
@@ -135,7 +141,9 @@ export function LaptopScene({
         />
       </Environment>
       <ambientLight intensity={0.25} />
+      {/* Key from upper right, soft fill from front left, cool rim behind. */}
       <directionalLight ref={keyLight} position={[4, 7, 6]} intensity={2} />
+      <directionalLight position={[-5, 2, 7]} intensity={0.7} />
       <directionalLight
         position={[-6, 3, -5]}
         intensity={2.4}
@@ -143,10 +151,10 @@ export function LaptopScene({
       />
       <ContactShadows
         ref={shadow}
-        position={[0, -1.95, 0.7]}
+        position={[0, -1.9, FINAL.z]}
         opacity={0}
-        scale={14 * profile.scale}
-        far={2.6 * profile.scale}
+        scale={16 * profile.scale}
+        far={3 * profile.scale}
         blur={3.2}
         resolution={compact ? 256 : 512}
         color="#2a2f38"

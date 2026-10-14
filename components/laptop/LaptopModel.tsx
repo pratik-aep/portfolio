@@ -4,7 +4,7 @@ import { RoundedBox } from "@react-three/drei";
 import type * as THREE from "three";
 import { Keyboard } from "./Keyboard";
 import { LaptopScreen } from "./LaptopScreen";
-import { LID_CLOSED } from "./choreography";
+import { LID_ARRIVAL } from "./choreography";
 
 // Hinge axis. The lid rotates around this line.
 const HINGE_Y = -1.49;
@@ -124,7 +124,7 @@ export function LaptopModel({
       <group
         ref={lid}
         position={[0, HINGE_Y, HINGE_Z]}
-        rotation={[LID_CLOSED, 0, 0]}
+        rotation={[LID_ARRIVAL, 0, 0]}
       >
         <RoundedBox
           args={[5.9, 3.7, 0.14]}
@@ -143,9 +143,9 @@ export function LaptopModel({
           <meshPhysicalMaterial
             color="#0b0c0e"
             metalness={0.2}
-            roughness={0.12}
-            clearcoat={1}
-            clearcoatRoughness={0.05}
+            roughness={0.3}
+            clearcoat={0.5}
+            clearcoatRoughness={0.25}
           />
         </RoundedBox>
         <LaptopScreen material={screen} resolution={screenResolution} />

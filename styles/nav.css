@@ -1,0 +1,128 @@
+/* Sticky navigation: white surface so the 3D scene never fights the text. */
+.nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  background: rgb(255 255 255 / 0.86);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+.nav-scrolled {
+  border-color: var(--line);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: min(var(--content), 100% - 2 * var(--gutter));
+  height: var(--nav-height);
+  margin-inline: auto;
+  animation: nav-reveal 0.7s var(--ease-out) both;
+}
+@keyframes nav-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.08em;
+}
+.brand-dot {
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  margin-left: auto;
+}
+.desktop-nav a {
+  position: relative;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text);
+  transition: color 0.25s;
+}
+/* Underline grows from the left on hover and stays on the active route. */
+.desktop-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s var(--ease-out);
+}
+.desktop-nav a:hover,
+.desktop-nav a.active {
+  color: var(--ink);
+}
+.desktop-nav a:hover::after,
+.desktop-nav a.active::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+.nav-cta {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+.menu-toggle {
+  display: none;
+  padding: 8px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+}
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .nav-inner {
+    gap: 12px;
+  }
+  .wordmark {
+    font-size: 23px;
+  }
+  .desktop-nav {
+    display: none;
+  }
+  .nav-cta {
+    margin-left: auto;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  .menu-toggle {
+    display: flex;
+  }
+  .mobile-nav.is-open {
+    display: flex;
+    flex-direction: column;
+    padding: 4px var(--gutter) 20px;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-nav a {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 0;
+    font-size: 17px;
+    border-bottom: 1px solid var(--line);
+  }
+}

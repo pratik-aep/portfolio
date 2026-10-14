@@ -24,16 +24,16 @@ export function ContactSection() {
     }
   }
   return (
-    <section id="contact" className="contact container">
+    <section id="brief" className="contact container">
       <div className="contact-copy">
         <span className="eyebrow">THE NEXT GOOD IDEA</span>
-        <h2>
+        <h1>
           Let&apos;s make
           <br />
           something
           <br />
           <span className="muted">that matters.</span>
-        </h2>
+        </h1>
         <p>
           Have a challenge in mind? Tell us what you&apos;re thinking. Great
           products start with a conversation.

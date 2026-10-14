@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { ArrowDown } from "lucide-react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function HeroSection() {
   const hero = useRef<HTMLElement>(null);
@@ -9,17 +11,30 @@ export function HeroSection() {
     const mm = gsap.matchMedia();
     mm.add("(prefers-reduced-motion: no-preference)", () => {
       const ctx = gsap.context(() => {
-        gsap.from(
-          ".hero .eyebrow, .hero-line span, .hero-subtitle, .scroll-cue",
-          {
-            y: 26,
-            opacity: 0,
-            duration: 0.85,
-            stagger: 0.11,
-            ease: "power3.out",
-            delay: 0.12,
+        // Entry: eyebrow, headline line by line, subtitle, then the cue.
+        // The navbar has its own CSS reveal that starts first.
+        gsap
+          .timeline({ defaults: { ease: "expo.out" }, delay: 0.2 })
+          .from(".hero-eyebrow", { y: 12, opacity: 0, duration: 0.9 })
+          .from(
+            ".hero-line > span",
+            { yPercent: 105, duration: 1.2, stagger: 0.12 },
+            "-=0.6",
+          )
+          .from(".hero-subtitle", { y: 18, opacity: 0, duration: 1 }, "-=0.8")
+          .from(".scroll-cue", { y: 10, opacity: 0, duration: 0.9 }, "-=0.6");
+        // The cue steps back as the laptop takes over.
+        gsap.to(".scroll-cue", {
+          opacity: 0,
+          y: 16,
+          ease: "none",
+          scrollTrigger: {
+            trigger: hero.current,
+            start: "top top",
+            end: "35% top",
+            scrub: true,
           },
-        );
+        });
       }, hero);
       return () => ctx.revert();
     });
@@ -27,33 +42,23 @@ export function HeroSection() {
   }, []);
   return (
     <section className="hero container" ref={hero}>
-      <span className="eyebrow">
-        SOFTWARE DEVELOPMENT <span className="eyebrow-dot">·</span> DIGITAL
-        EXPERIENCES
-      </span>
-      <h1>
+      <span className="eyebrow hero-eyebrow">Built to make an impact</span>
+      <h1 className="hero-title">
         <span className="hero-line">
-          <span>We build digital products</span>
+          <span>Engineering</span>
         </span>
         <span className="hero-line">
-          <span>that solve real problems.</span>
+          <span>what&apos;s next.</span>
         </span>
       </h1>
       <p className="hero-subtitle">
-        We turn ambitious ideas into beautifully designed websites,
-        <br className="desktop-break" /> applications, and powerful digital
-        solutions.
+        We design and build websites, applications, and intelligent digital
+        experiences for a smarter tomorrow.
       </p>
       <a className="scroll-cue" href="#experience">
-        <span>SCROLL TO EXPLORE</span>
-        <span className="scroll-arrow">
-          <ArrowDown size={18} />
-        </span>
+        <span>Scroll to explore</span>
+        <span className="scroll-line" aria-hidden />
       </a>
-      <div className="hero-bottom">
-        <span>IDEAS INTO REALITY.</span>
-        <span>DESIGN + ENGINEERING</span>
-      </div>
     </section>
   );
 }

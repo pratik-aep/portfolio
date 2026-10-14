@@ -32,7 +32,8 @@ export function Navbar() {
   }, []);
   const isActive = (name: string) =>
     (name === "Home" && pathname === "/") ||
-    (name === "Projects" && pathname.startsWith("/projects"));
+    (name === "Projects" && pathname.startsWith("/projects")) ||
+    (name === "Contact" && pathname.startsWith("/contact"));
   return (
     <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
       <div className="nav-inner">
@@ -54,7 +55,7 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
-        <Link className="button nav-cta" href="/#contact">
+        <Link className="button nav-cta" href="/contact/">
           Let&apos;s Talk <ArrowUpRight size={15} />
         </Link>
         <button

@@ -37,10 +37,11 @@ app/                      Routes only (App Router)
   layout.tsx              Fonts, global CSS, smooth scroll, nav, footer
   page.tsx                Home: composes the sections below
   projects/               /projects/ and statically generated detail pages
-  globals.css             Design tokens, layout, responsive rules
+  contact/                /contact/: the project brief form
+  globals.css             Imports the stylesheets in styles/
 components/
   layout/                 Navbar, Footer, Wordmark
-  home/                   HeroSection, FeaturedProjects, AboutSection
+  home/                   HeroSection, FeaturedProjects, Horizon, AboutSection, ContactCTA
   laptop/                 The 3D scroll showcase (see below)
   projects/               ProjectCard
   contact/                ContactSection (brief download / email draft)
@@ -48,6 +49,8 @@ components/
 data/                     site.ts (brand, contact), projects.ts (content)
 hooks/                    usePrefersReducedMotion
 lib/                      asset() base-path helper, monotone spline, Lenis handle
+styles/                   tokens.css (design tokens) and one file per area, each
+                          with its own responsive rules
 public/previews/          Generated SVG interfaces (cards + laptop screens)
 scripts/                  Preview artwork generator
 docs/                     Original brief, design review, visual reference
@@ -67,7 +70,9 @@ docs/                     Original brief, design review, visual reference
 | `StaticLaptop.tsx`         | CSS fallback for reduced motion and devices without WebGL2.                               |
 | `SceneBoundary.tsx`        | Error boundary that switches to the fallback.                                             |
 
-Scroll writes into a ref, the render loop reads it, and DOM overlays update from an `onFrame` callback. Scrolling never triggers a React render. To retime the animation, edit the keyframes in `choreography.ts`. Each channel (position, rotation, scale, lid, screen) has its own keys and is interpolated with a monotone cubic spline, so motion stays continuous without overshooting.
+One ScrollTrigger is the single source of progress. Scroll writes into a ref, the render loop reads and smooths it, and DOM overlays (phase markers, callouts, motion trail, project captions, exit fade) update from an `onFrame` callback. Scrolling never triggers a React render.
+
+The story runs in five phases defined in `choreography.ts` (`PHASES`): arrival, reveal, orbit, presentation, final. To retime the animation, edit the keyframes there. Each channel (position, rotation, scale, lid, screen) has its own keys and is interpolated with a monotone cubic spline, so motion stays continuous without overshooting. Rotations stay within ±45°, so per-axis Euler interpolation has no wrap-around discontinuities. `profileFor()` scales travel, size and rotation for tablet, phone and short viewports.
 
 ## CI/CD
 

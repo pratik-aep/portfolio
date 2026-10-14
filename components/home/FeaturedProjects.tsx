@@ -8,15 +8,14 @@ export function FeaturedProjects() {
   return (
     <section className="featured container" id="work">
       <Reveal className="section-heading">
-        <span className="eyebrow">FEATURED WORK</span>
+        <span className="eyebrow">Featured work</span>
         <h2>
           Selected projects.
-          <br className="mobile-break" /> Real solutions.
+          <br /> Real solutions.
         </h2>
         <p>
-          A selection of the applications and platforms we&apos;ve built,
-          <br className="desktop-break" /> combining modern technology with
-          thoughtful design.
+          A selection of applications and platforms we&apos;ve built, combining
+          modern technology with thoughtful design.
         </p>
       </Reveal>
       <div className="project-grid">
@@ -25,10 +24,9 @@ export function FeaturedProjects() {
         ))}
       </div>
       <Reveal className="featured-action">
-        <Link className="button" href="/projects/">
-          View All Projects <ArrowRight size={17} />
+        <Link className="button button-lg" href="/projects/">
+          View All Projects <ArrowRight size={18} />
         </Link>
-        <span>Four different challenges. One thoughtful approach.</span>
       </Reveal>
     </section>
   );

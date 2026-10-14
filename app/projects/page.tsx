@@ -27,7 +27,7 @@ export default function ProjectsPage() {
       </div>
       <div className="collection-end">
         <p>Your idea could be next.</p>
-        <Link href="/#contact" className="button">
+        <Link href="/contact/" className="button">
           Let&apos;s talk about it <ArrowUpRight size={17} />
         </Link>
       </div>

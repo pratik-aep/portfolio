@@ -1,0 +1,87 @@
+/* Opening frame: typography only, centred. */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: max(640px, 100svh);
+  padding-top: var(--nav-height);
+  padding-bottom: 72px;
+  text-align: center;
+}
+.hero-title {
+  max-width: 1000px;
+  margin-top: 26px;
+  font-size: var(--fs-hero);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+/* Each line is masked so the words rise into view. */
+.hero-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.hero-line > span {
+  display: inline-block;
+}
+.hero-subtitle {
+  max-width: 540px;
+  margin-top: 30px;
+  font-size: clamp(16px, 0.9rem + 0.3vw, 19px);
+  letter-spacing: -0.015em;
+}
+.scroll-cue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: clamp(48px, 7vh, 80px);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.scroll-line {
+  position: relative;
+  width: 1px;
+  height: 56px;
+  overflow: hidden;
+  background: var(--line);
+}
+.scroll-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  animation: scroll-line 2.4s var(--ease-soft) infinite;
+}
+@keyframes scroll-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  55%,
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@media (max-width: 767px) {
+  .hero {
+    min-height: max(560px, 92svh);
+    padding-bottom: 48px;
+  }
+  .hero-title {
+    margin-top: 20px;
+    line-height: 1.02;
+  }
+  .hero-subtitle {
+    max-width: 330px;
+    margin-top: 22px;
+  }
+  .scroll-line {
+    height: 44px;
+  }
+}
