@@ -5,6 +5,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/**
+ * Opening frame. The laptop scene is pinned behind it (see
+ * styles/showcase.css), so as the visitor scrolls the headline lifts and
+ * fades while the laptop sweeps in.
+ */
 export function HeroSection() {
   const hero = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -23,17 +28,26 @@ export function HeroSection() {
           )
           .from(".hero-subtitle", { y: 18, opacity: 0, duration: 1 }, "-=0.8")
           .from(".scroll-cue", { y: 10, opacity: 0, duration: 0.9 }, "-=0.6");
-        // The cue steps back as the laptop takes over.
+        const scrub = {
+          trigger: hero.current,
+          start: "top top",
+          scrub: true,
+        };
+        // Exit: the whole block lifts away and fades while the laptop takes
+        // the frame. A wrapper is animated so the entry tweens never clash.
+        gsap.to(".hero-content", {
+          y: -90,
+          scale: 0.97,
+          opacity: 0,
+          ease: "power1.in",
+          scrollTrigger: { ...scrub, end: "45% top" },
+        });
+        // The cue steps back first.
         gsap.to(".scroll-cue", {
           opacity: 0,
           y: 16,
           ease: "none",
-          scrollTrigger: {
-            trigger: hero.current,
-            start: "top top",
-            end: "35% top",
-            scrub: true,
-          },
+          scrollTrigger: { ...scrub, end: "20% top" },
         });
       }, hero);
       return () => ctx.revert();
@@ -42,23 +56,28 @@ export function HeroSection() {
   }, []);
   return (
     <section className="hero container" ref={hero}>
-      <span className="eyebrow hero-eyebrow">Built to make an impact</span>
-      <h1 className="hero-title">
-        <span className="hero-line">
-          <span>Engineering</span>
-        </span>
-        <span className="hero-line">
-          <span>what&apos;s next.</span>
-        </span>
-      </h1>
-      <p className="hero-subtitle">
-        We design and build websites, applications, and intelligent digital
-        experiences for a smarter tomorrow.
-      </p>
-      <a className="scroll-cue" href="#experience">
-        <span>Scroll to explore</span>
-        <span className="scroll-line" aria-hidden />
-      </a>
+      <div className="hero-content">
+        <span className="eyebrow hero-eyebrow">Built to make an impact</span>
+        <h1 className="hero-title">
+          <span className="hero-line">
+            <span>Engineering</span>
+          </span>
+          <span className="hero-line">
+            <span>what&apos;s next.</span>
+          </span>
+        </h1>
+        <p className="hero-subtitle">
+          We design and build websites, applications, and intelligent digital
+          experiences for a smarter tomorrow.
+        </p>
+        <a className="scroll-cue" href="#story">
+          <span>Scroll to explore</span>
+          <span className="scroll-line" aria-hidden />
+        </a>
+      </div>
+      {/* Where "Scroll to explore" lands: partway into the laptop reveal
+          (or the static showcase under reduced motion). */}
+      <span id="story" className="hero-anchor" aria-hidden />
     </section>
   );
 }

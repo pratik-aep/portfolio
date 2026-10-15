@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/projects";
+import { shareMetadata } from "@/data/site";
 import { ProjectCard } from "@/components/projects/ProjectCard";
-export const metadata: Metadata = { title: "Projects" };
+const description =
+  "Selected work across IoT and data, geospatial and AI, machine learning, and interactive 3D.";
+export const metadata: Metadata = {
+  title: "Projects",
+  description,
+  ...shareMetadata({ path: "/projects/", title: "Projects", description }),
+};
 export default function ProjectsPage() {
   return (
     <main id="main" className="projects-page container">

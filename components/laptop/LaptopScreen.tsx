@@ -3,6 +3,7 @@ import { useEffect, useMemo, type RefObject } from "react";
 import { useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { projects } from "@/data/projects";
+import { runWhenIdle } from "@/lib/idle";
 
 // One screen per featured project, in showcase order.
 const SCREENS = projects.map((p) => p.image);
@@ -27,6 +28,8 @@ uniform sampler2D d;
 uniform float progress;
 uniform float power;
 uniform float sweep;
+uniform float glint;
+uniform float glintPos;
 varying vec2 vUv;
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -44,7 +47,10 @@ void main() {
   float fresnel = pow(1.0 - max(dot(normalize(vNormal), view), 0.0), 4.0);
   float band = vUv.x * 0.85 + vUv.y * 0.6 - 0.72 - sweep;
   float sheen = smoothstep(0.32, 0.0, abs(band)) * 0.03;
-  panel += vec3(fresnel * 0.3 + sheen);
+  // Reveal glint: a narrow bright streak that crosses the glass once.
+  float streakBand = vUv.x * 0.85 + vUv.y * 0.6 - 0.72 - glintPos;
+  float streak = smoothstep(0.12, 0.0, abs(streakBand)) * glint * 0.32;
+  panel += vec3(fresnel * 0.3 + sheen + streak);
   gl_FragColor = vec4(panel, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -68,13 +74,20 @@ function useScreenTextures(width: number) {
     });
   }, [images, width, gl]);
   useEffect(() => () => textures.forEach((t) => t.dispose()), [textures]);
+  // Upload to the GPU ahead of time, one texture per idle period, so the
+  // first screen change never stalls a scroll frame.
+  useEffect(
+    () => runWhenIdle(textures.map((t) => () => gl.initTexture(t))),
+    [textures, gl],
+  );
   return textures;
 }
 
 /**
  * The display panel. Driven per frame through `material.current.uniforms`:
  * `progress` (screen index, fractional values crossfade), `power` (0 off →
- * 1 on) and `sweep` (glass sheen offset). R3F copies uniforms passed as
+ * 1 on), `sweep` (glass sheen offset) and `glint` / `glintPos` (the streak
+ * that crosses the glass at the reveal). R3F copies uniforms passed as
  * props, so writes must go through the material instance.
  */
 export function LaptopScreen({
@@ -94,6 +107,8 @@ export function LaptopScreen({
       progress: { value: 0 },
       power: { value: 0 },
       sweep: { value: 0 },
+      glint: { value: 0 },
+      glintPos: { value: -1 },
     }),
     [textures],
   );

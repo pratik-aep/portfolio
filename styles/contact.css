@@ -1,0 +1,237 @@
+/* /contact/: two-tone split. Dark intro panel on the left (stacked on top
+   below 1024px), the form on white with a soft glow and hairline grid.
+   Form controls themselves are styled in sections.css. */
+
+.contact-split {
+  /* Outer edges line up with the site container on wide screens. */
+  --edge: max(var(--gutter), calc((100vw - var(--content)) / 2));
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  min-height: 100svh;
+}
+
+/* Dark panel ─────────────────────────────────────────────────────────── */
+.contact-panel {
+  position: relative;
+  padding: calc(var(--nav-height) + clamp(48px, 7vh, 88px))
+    clamp(32px, 4vw, 72px) clamp(48px, 7vh, 88px) var(--edge);
+  background: var(--surface-dark);
+  color: var(--ink-inverse);
+}
+/* A whisper of accent light in the corner, matching the homepage CTA. */
+.contact-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 50% at 0% 100%,
+    color-mix(in srgb, var(--accent-on-dark) 10%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+/* Sticky only where the whole panel fits beside the form. */
+@media (min-width: 1024px) and (min-height: 960px) {
+  .contact-panel-inner {
+    position: sticky;
+    top: calc(var(--nav-height) + 40px);
+  }
+}
+.contact-intro {
+  position: relative;
+}
+.contact-intro .eyebrow {
+  color: var(--muted-inverse);
+}
+.contact-intro h1 {
+  margin-top: 18px;
+  font-size: clamp(40px, 1.6rem + 2.4vw, 64px);
+  line-height: 1;
+}
+.contact-intro h1 .muted {
+  color: var(--muted-inverse);
+}
+.contact-intro-lede {
+  max-width: 380px;
+  margin-top: 24px;
+  color: var(--text-inverse);
+}
+
+/* What happens next: numbered steps joined by a thin accent line. */
+.next-steps {
+  margin-top: clamp(36px, 5vh, 56px);
+}
+.next-steps ol {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+/* Connector from each circle down to the next one (the 22px list gap). */
+.next-steps li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 32px;
+  bottom: -22px;
+  left: 15.5px;
+  width: 1px;
+  background: linear-gradient(
+    var(--accent-on-dark),
+    color-mix(in srgb, var(--accent-on-dark) 25%, transparent)
+  );
+}
+.next-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.next-step-number {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--accent-on-dark) 45%, transparent);
+  border-radius: 50%;
+  background: var(--surface-dark);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-on-dark);
+}
+.next-steps h3 {
+  margin-top: 5px;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+.next-steps p {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted-inverse);
+}
+
+/* Availability, local time and contact channels. */
+.contact-intro-meta {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  margin-top: clamp(36px, 5vh, 56px);
+}
+.contact-intro-meta:empty {
+  display: none;
+}
+.availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-inverse);
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--ink-inverse);
+}
+.availability-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success-on-dark);
+}
+.availability-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--success-on-dark);
+  animation: availability-pulse 2.4s var(--ease-soft) infinite;
+}
+@keyframes availability-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+.local-time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted-inverse);
+}
+
+/* Form side ──────────────────────────────────────────────────────────── */
+.contact-main {
+  position: relative;
+  padding: calc(var(--nav-height) + clamp(48px, 7vh, 88px)) var(--edge)
+    clamp(64px, 9vh, 112px) clamp(32px, 5vw, 96px);
+  overflow: hidden;
+}
+/* Static, low-contrast depth: a hairline grid fading out from the top
+   right, plus a soft accent glow. Nothing animates, so scrolling never
+   repaints it. */
+.contact-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 45% at 85% 20%, var(--glow), transparent 70%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 /
+      var(--grid-size) var(--grid-size),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 /
+      var(--grid-size) var(--grid-size);
+  -webkit-mask-image: radial-gradient(
+    ellipse 75% 60% at 80% 15%,
+    #000 0%,
+    transparent 75%
+  );
+  mask-image: radial-gradient(
+    ellipse 75% 60% at 80% 15%,
+    #000 0%,
+    transparent 75%
+  );
+}
+.contact-main-inner {
+  position: relative;
+  max-width: 640px;
+}
+.contact-main-inner > .eyebrow {
+  display: block;
+  margin-bottom: 28px;
+}
+.contact-main .contact-form input,
+.contact-main .contact-form textarea {
+  background: transparent;
+}
+
+/* Tablet and phone: the panel becomes a compact header block. */
+@media (max-width: 1023px) {
+  .contact-split {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .contact-panel {
+    padding: calc(var(--nav-height) + 40px) var(--gutter) 56px;
+  }
+  .contact-intro-lede {
+    max-width: 520px;
+  }
+  .next-steps ol {
+    max-width: 520px;
+  }
+  .contact-main {
+    padding: 56px var(--gutter) 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .availability-dot::after {
+    animation: none;
+    opacity: 0;
+  }
+}

@@ -39,7 +39,17 @@ jobs:
     env:
       # GitHub Pages serves project sites from /<repository-name>.
       PAGES_BASE_PATH: /${{ github.event.repository.name }}
+      # Optional site configuration (see .env.example); unset values are
+      # hidden from the UI.
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
       NEXT_PUBLIC_CONTACT_EMAIL: ${{ vars.NEXT_PUBLIC_CONTACT_EMAIL }}
+      NEXT_PUBLIC_FORM_ENDPOINT: ${{ vars.NEXT_PUBLIC_FORM_ENDPOINT }}
+      NEXT_PUBLIC_FORM_ACCESS_KEY: ${{ vars.NEXT_PUBLIC_FORM_ACCESS_KEY }}
+      NEXT_PUBLIC_BOOKING_URL: ${{ vars.NEXT_PUBLIC_BOOKING_URL }}
+      NEXT_PUBLIC_RESUME_URL: ${{ vars.NEXT_PUBLIC_RESUME_URL }}
+      NEXT_PUBLIC_GITHUB_URL: ${{ vars.NEXT_PUBLIC_GITHUB_URL }}
+      NEXT_PUBLIC_LINKEDIN_URL: ${{ vars.NEXT_PUBLIC_LINKEDIN_URL }}
+      NEXT_PUBLIC_X_URL: ${{ vars.NEXT_PUBLIC_X_URL }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

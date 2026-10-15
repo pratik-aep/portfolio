@@ -54,16 +54,31 @@
   font-size: 14px;
 }
 
-/* Closing invitation. */
+/* Closing invitation: an inverted section. ToneShift scrubs --tone
+   (0 light → 1 dark) as the section enters: the background eases from
+   white into the dark surface, then the content fades in once there is
+   enough contrast. Without JS, or with reduced motion, --tone stays 1. */
 .cta {
+  --tone: 1;
   padding-block: var(--section);
-  border-top: 1px solid var(--line);
+  background: color-mix(
+    in srgb,
+    var(--surface-dark) calc(var(--tone) * 100%),
+    var(--bg)
+  );
+  color: var(--ink-inverse);
   text-align: center;
 }
-.cta-inner {
+.cta-content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Hidden until the surface is at least ~60% dark. */
+  opacity: clamp(0, calc((var(--tone) - 0.6) * 2.5), 1);
+}
+.cta .eyebrow,
+.cta .muted {
+  color: var(--muted-inverse);
 }
 .cta h2 {
   margin-top: 18px;
@@ -72,44 +87,90 @@
 .cta p {
   max-width: 460px;
   margin-top: 24px;
+  color: var(--text-inverse);
 }
 .cta .button {
   margin-top: 40px;
 }
-
-/* /contact/ form page. */
-.contact-page {
-  padding-top: var(--nav-height);
+.cta :focus-visible {
+  outline-color: var(--accent-on-dark);
 }
-.contact {
-  display: grid;
-  grid-template-columns: 1fr 1.05fr;
-  gap: clamp(48px, 7vw, 112px);
-  padding-block: clamp(64px, 8vw, 120px);
-}
-.contact > * {
-  min-width: 0;
-}
-.contact-copy h1 {
-  margin-top: 18px;
-  font-size: var(--fs-statement);
-}
-.contact-copy p {
-  max-width: 360px;
-  margin-top: 26px;
-}
-.contact-foot {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 32px;
-  font-size: 14px;
-  color: var(--text);
-}
-.tiny-plus {
-  font-size: 24px;
-  font-weight: 300;
+/* Inverse button for dark surfaces. */
+.button-inverse {
+  border-color: var(--ink-inverse);
+  background: var(--ink-inverse);
   color: var(--ink);
+}
+.button-inverse:hover {
+  background: color-mix(in srgb, var(--ink-inverse) 88%, var(--surface-dark));
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+}
+
+/* Booking / résumé links and social icons (contact page + footer). */
+.contact-channels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+}
+.contact-channels-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.channel-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    border-color 0.3s,
+    color 0.3s,
+    background 0.3s;
+}
+.channel-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.social-links {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.social-links a {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--text);
+  transition:
+    border-color 0.3s,
+    color 0.3s;
+}
+.social-links a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.social-links-inverse a,
+.contact-channels-inverse .channel-link {
+  border-color: var(--line-inverse);
+  color: var(--text-inverse);
+}
+.social-links-inverse a:hover,
+.contact-channels-inverse .channel-link:hover {
+  border-color: var(--accent-on-dark);
+  background: transparent;
+  color: var(--accent-on-dark);
 }
 .contact-form label,
 .form-label {
@@ -200,36 +261,124 @@
   min-height: 22px;
   margin-top: 16px;
   font-size: 14px;
-  color: #2f6b5f;
+  color: var(--accent);
+}
+.field-error {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--danger);
+}
+.contact-form [aria-invalid="true"] {
+  border-color: var(--danger);
+}
+/* Hidden from people and assistive tech; bots fill it in. */
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.button:disabled {
+  opacity: 0.7;
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.form-error {
+  margin-top: 12px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+}
+.form-error p {
+  font-size: 14px;
+  color: var(--ink);
+}
+.form-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 14px;
+}
+.form-error .text-link {
+  padding-top: 0;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.contact-success {
+  align-self: center;
+  padding: clamp(28px, 4vw, 48px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+.success-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--ink-inverse);
+}
+.contact-success h2 {
+  margin-top: 24px;
+  font-size: var(--fs-h2);
+  outline: none;
+}
+.contact-success p {
+  margin-top: 16px;
 }
 
 /* Footer */
 .footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 32px;
+  justify-content: space-between;
+  gap: 20px 40px;
   padding-block: 32px;
   border-top: 1px solid var(--line);
+}
+.footer-brand,
+.footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 .footer .wordmark {
   font-size: 22px;
 }
-.footer > span,
+.footer-brand > span,
 .footer small {
   font-size: 13px;
   color: var(--muted);
 }
-.footer > a:nth-of-type(2) {
+.footer-meta a {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
   font-size: 13px;
+}
+.footer-meta a:hover {
+  color: var(--accent);
 }
 
 @media (max-width: 900px) {
-  .about,
-  .contact {
+  .about {
     grid-template-columns: 1fr;
   }
   .form-submit {
@@ -252,13 +401,10 @@
     gap: 0;
   }
   .footer {
-    flex-wrap: wrap;
-    gap: 14px 24px;
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .footer > span {
+  .footer-brand > span {
     display: none;
-  }
-  .footer small {
-    width: 100%;
   }
 }

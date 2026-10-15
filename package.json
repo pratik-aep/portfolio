@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@react-three/drei": "^10.7.0",
     "@react-three/fiber": "^9.4.0",
     "gsap": "^3.14.0",

@@ -92,6 +92,47 @@
   display: none;
 }
 
+/* Contact page, before scrolling: transparent bar over the split layout.
+   Wide screens: the wordmark sits over the dark panel, links over white.
+   Narrower screens: the panel spans the full width, so everything inverts. */
+.nav[data-surface="split"] {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.nav[data-surface="split"] .wordmark {
+  color: var(--ink-inverse);
+}
+.nav[data-surface="split"] .brand-dot {
+  background: var(--accent-on-dark);
+}
+.nav[data-surface="split"] .nav-inner > a:first-child:focus-visible {
+  outline-color: var(--accent-on-dark);
+}
+@media (max-width: 1023px) {
+  .nav[data-surface="split"] :focus-visible {
+    outline-color: var(--accent-on-dark);
+  }
+  .nav[data-surface="split"] .desktop-nav a {
+    color: var(--text-inverse);
+  }
+  .nav[data-surface="split"] .desktop-nav a:hover,
+  .nav[data-surface="split"] .desktop-nav a.active {
+    color: var(--ink-inverse);
+  }
+  .nav[data-surface="split"] .desktop-nav a::after {
+    background: var(--ink-inverse);
+  }
+  .nav[data-surface="split"] .nav-cta {
+    border-color: var(--ink-inverse);
+    background: var(--ink-inverse);
+    color: var(--ink);
+  }
+  .nav[data-surface="split"] .menu-toggle {
+    color: var(--ink-inverse);
+  }
+}
+
 @media (max-width: 767px) {
   .nav-inner {
     gap: 12px;

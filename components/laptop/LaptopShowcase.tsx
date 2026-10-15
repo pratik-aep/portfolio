@@ -7,7 +7,13 @@ import { projects } from "@/data/projects";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { getLenis } from "@/lib/lenis";
 import { smoothstep } from "@/lib/monotone-spline";
-import { PHASES, phaseAt, profileFor, type Profile } from "./choreography";
+import {
+  CAMERA,
+  PHASES,
+  phaseAt,
+  profileFor,
+  type Profile,
+} from "./choreography";
 import { LaptopScene, type SceneDriver, type SceneFrame } from "./LaptopScene";
 import { SceneBoundary } from "./SceneBoundary";
 import { StaticLaptop } from "./StaticLaptop";
@@ -20,6 +26,9 @@ const CALLOUTS = [
   { text: "Designed in three dimensions", from: 0.38, to: 0.58, side: "left" },
   { text: "Engineered to the detail", from: 0.62, to: 0.84, side: "left" },
 ] as const;
+
+// Background parallax: pixels of drift per radian of camera arc.
+const DRIFT_PX = 260;
 
 function supportsWebGL2() {
   try {
@@ -36,6 +45,8 @@ const sameProfile = (a: Profile, b: Profile) =>
  * The pinned, scroll-scrubbed laptop story. Client-only: loaded through
  * LaptopShowcaseLoader so three.js stays out of the initial bundle.
  *
+ * The section starts at the top of the page, behind the hero (see
+ * styles/showcase.css), so the laptop can arrive while the headline leaves.
  * One ScrollTrigger is the single source of progress. The render loop reads
  * it, smooths it, and reports each frame back through `onFrame`, which
  * drives the DOM overlays without React renders.
@@ -57,11 +68,26 @@ export default function LaptopShowcase() {
     profile,
   });
   // Last values written to the overlays, to skip redundant DOM writes.
-  const overlay = useRef({ phase: -2, chapter: -2, callouts: "", exit: -1 });
+  const overlay = useRef({
+    phase: -2,
+    chapter: -2,
+    callouts: "",
+    vars: "",
+    entered: false,
+  });
   const [ready, setReady] = useState(false);
   const onReady = useCallback(() => setReady(true), []);
   const [active, setActive] = useState(false);
   const [visible, setVisible] = useState(false);
+  // At the very top of the page the laptop is out of frame: render on
+  // demand only, and run the loop once the story is actually moving.
+  const [moving, setMoving] = useState(false);
+  const movingRef = useRef(false);
+  const updateMoving = useCallback((value: boolean) => {
+    if (movingRef.current === value) return;
+    movingRef.current = value;
+    setMoving(value);
+  }, []);
   const [fallback, setFallback] = useState(() => !supportsWebGL2());
   const systemReduced = usePrefersReducedMotion();
   const [reducedOverride, setReducedOverride] = useState<boolean | null>(null);
@@ -69,43 +95,70 @@ export default function LaptopShowcase() {
   const simplified = fallback || reduced;
 
   // Overlays follow the rendered (smoothed) motion, not raw scroll.
-  const onFrame = useCallback(({ progress, power, screen }: SceneFrame) => {
-    const last = overlay.current;
-    const phase = phaseAt(progress);
-    if (phase !== last.phase) {
-      last.phase = phase;
-      markers.current
-        ?.querySelectorAll("li")
-        .forEach((el, i) => el.classList.toggle("is-active", i === phase));
-      if (numeral.current) numeral.current.textContent = PHASES[phase].id;
-    }
-    const shown = CALLOUTS.map((c) => progress >= c.from && progress < c.to);
-    const key = shown.join();
-    if (key !== last.callouts && callouts.current) {
-      last.callouts = key;
-      Array.from(callouts.current.children).forEach((el, i) =>
-        el.classList.toggle("is-visible", shown[i]),
-      );
-    }
-    const chapter = power < 0.5 ? -1 : Math.round(screen);
-    if (chapters.current && chapter !== last.chapter) {
-      last.chapter = chapter;
-      Array.from(chapters.current.children).forEach((el, i) =>
-        el.classList.toggle("is-active", i === chapter),
-      );
-    }
-    // Exit: overlays clear away and the laptop dims slightly as the
-    // featured work takes over. CSS reads --exit (0→1).
-    const exit = Math.round(smoothstep(0.88, 0.99, progress) * 100);
-    if (root.current && exit !== last.exit) {
-      last.exit = exit;
-      root.current.style.setProperty("--exit", String(exit / 100));
-    }
-    if (trail.current)
-      trail.current.style.strokeDashoffset = String(1 - progress);
-    if (bar.current)
-      bar.current.style.transform = `scaleX(${progress.toFixed(4)})`;
-  }, []);
+  const onFrame = useCallback(
+    ({ progress, power, screen, focus, drift }: SceneFrame) => {
+      const last = overlay.current;
+      const section = root.current;
+      if (progress < 0.0005 && driver.current.progress === 0)
+        updateMoving(false);
+
+      const phase = phaseAt(progress);
+      if (phase !== last.phase) {
+        last.phase = phase;
+        markers.current
+          ?.querySelectorAll("li")
+          .forEach((el, i) => el.classList.toggle("is-active", i === phase));
+        if (numeral.current) numeral.current.textContent = PHASES[phase].id;
+      }
+      const shown = CALLOUTS.map((c) => progress >= c.from && progress < c.to);
+      const key = shown.join();
+      if (key !== last.callouts && callouts.current) {
+        last.callouts = key;
+        Array.from(callouts.current.children).forEach((el, i) =>
+          el.classList.toggle("is-visible", shown[i]),
+        );
+      }
+      const chapter = power < 0.5 ? -1 : Math.round(screen);
+      if (chapters.current && chapter !== last.chapter) {
+        last.chapter = chapter;
+        Array.from(chapters.current.children).forEach((el, i) =>
+          el.classList.toggle("is-active", i === chapter),
+        );
+      }
+
+      // CSS custom properties (see styles/showcase.css):
+      // --enter  scene furniture fades in as the hero leaves
+      // --exit   overlays clear as the featured work takes over
+      // --focus  background focus pull at the peak of the orbit
+      // --drift  background parallax following the camera arc
+      const enter = smoothstep(0.03, 0.14, progress);
+      const exit = smoothstep(0.88, 0.99, progress);
+      const vars = [
+        enter.toFixed(3),
+        exit.toFixed(3),
+        focus.toFixed(3),
+        (drift * DRIFT_PX).toFixed(1),
+      ];
+      const varsKey = vars.join();
+      if (section && varsKey !== last.vars) {
+        last.vars = varsKey;
+        section.style.setProperty("--enter", vars[0]);
+        section.style.setProperty("--exit", vars[1]);
+        section.style.setProperty("--focus", vars[2]);
+        section.style.setProperty("--drift", vars[3]);
+      }
+      const entered = enter > 0.01;
+      if (section && entered !== last.entered) {
+        last.entered = entered;
+        section.toggleAttribute("data-entered", entered);
+      }
+      if (trail.current)
+        trail.current.style.strokeDashoffset = String(1 - progress);
+      if (bar.current)
+        bar.current.style.transform = `scaleX(${progress.toFixed(4)})`;
+    },
+    [updateMoving],
+  );
 
   useEffect(() => {
     const resize = () => {
@@ -151,27 +204,32 @@ export default function LaptopShowcase() {
     if (simplified) return;
     const sync = (self: ScrollTrigger) => {
       driver.current.progress = self.progress;
+      if (self.progress > 0) updateMoving(true);
     };
-    // Starts while the scene is still rising into view, so the laptop is
-    // already arriving as the hero leaves: no empty pinned frame.
+    // The section begins at the top of the page (it sits behind the hero),
+    // so progress starts with the very first pixel of scroll.
     const trigger = ScrollTrigger.create({
       trigger: root.current,
-      start: "top 50%",
+      start: "top top",
       end: "bottom bottom",
       invalidateOnRefresh: true,
       onUpdate: sync,
       onRefresh: sync,
     });
     return () => trigger.kill();
-  }, [simplified]);
+  }, [simplified, updateMoving]);
 
   const toggleMotion = () => {
     setReducedOverride(!reduced);
-    // The section changes height; keep the visitor at its top.
-    const lenis = getLenis();
-    if (lenis && root.current)
-      lenis.scrollTo(root.current, { immediate: true });
-    else root.current?.scrollIntoView({ behavior: "instant", block: "start" });
+    // The section changes size and position; once React has committed,
+    // bring the visitor to its start.
+    requestAnimationFrame(() => {
+      const lenis = getLenis();
+      if (lenis && root.current)
+        lenis.scrollTo(root.current, { immediate: true, force: true });
+      else
+        root.current?.scrollIntoView({ behavior: "instant", block: "start" });
+    });
   };
 
   return (
@@ -181,6 +239,9 @@ export default function LaptopShowcase() {
       className={`showcase ${simplified ? "is-simplified" : ""}`}
       aria-label="Scroll-controlled 3D laptop showcase"
     >
+      {/* Studio backdrop: its own sticky layer so it sits beneath the hero,
+          while the laptop frame below sits above it. */}
+      <div className="showcase-backdrop" aria-hidden />
       <div className="showcase-sticky">
         <div className="showcase-stage">
           {!simplified && (
@@ -224,17 +285,17 @@ export default function LaptopShowcase() {
               <SceneBoundary onFailure={() => setFallback(true)}>
                 <Canvas
                   dpr={[1, 1.75]}
-                  frameloop={visible ? "always" : "never"}
-                  camera={{ position: [0, 1.5, 15], fov: 30 }}
+                  frameloop={visible && moving ? "always" : "demand"}
+                  camera={{ position: [0, 1.5, 15], fov: CAMERA.fov }}
+                  // The canvas sits above the hero; never block its links.
+                  style={{ pointerEvents: "none" }}
                   gl={{
                     alpha: true,
                     antialias: true,
                     powerPreference: "high-performance",
                     toneMappingExposure: 1.05,
                   }}
-                  onCreated={({ gl, camera }) => {
-                    // A slight downward look keeps the keyboard readable.
-                    camera.lookAt(0, 0.2, 0);
+                  onCreated={({ gl }) => {
                     gl.domElement.addEventListener(
                       "webglcontextlost",
                       () => {

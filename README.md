@@ -74,6 +74,8 @@ One ScrollTrigger is the single source of progress. Scroll writes into a ref, th
 
 The story runs in five phases defined in `choreography.ts` (`PHASES`): arrival, reveal, orbit, presentation, final. To retime the animation, edit the keyframes there. Each channel (position, rotation, scale, lid, screen) has its own keys and is interpolated with a monotone cubic spline, so motion stays continuous without overshooting. Rotations stay within ±45°, so per-axis Euler interpolation has no wrap-around discontinuities. `profileFor()` scales travel, size and rotation for tablet, phone and short viewports.
 
+The camera and lighting are choreographed the same way, as tracks in `choreography.ts`: a slow dolly-in with a slight orbit arc (`camera`), a focus pull that blurs the DOM background at the peak of the orbit (`camera.focus`), a moving sweep light, a screen glint and a rim-light flash at the reveal (`light`). The section is pulled up beneath the hero (`--hero-h`, see `styles/showcase.css`), so the pinned frame is in place from the first pixel of scroll: the headline lifts away while the laptop sweeps in. At the very top of the page the canvas renders on demand only (the laptop is out of frame), and shaders and screen textures are compiled and uploaded in idle time before the arrival starts. Under reduced motion there is no overlap and the static laptop sits in its own section.
+
 ## CI/CD
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every pull request and every push to `main`:
@@ -87,8 +89,27 @@ PR runs are cancelled when superseded; deployments are queued, never cancelled. 
 ### One-time setup
 
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions.** The deploy job fails until this is set.
-2. Optional: **Settings → Secrets and variables → Actions → Variables**, add `NEXT_PUBLIC_CONTACT_EMAIL` to turn the contact form into an email draft.
+2. Optional: **Settings → Secrets and variables → Actions → Variables**, add any of the site variables below. The workflow passes them to the build.
 3. Recommended: protect `main` and require the **Lint, format, typecheck** and **Build static site** checks.
+
+## Configuration
+
+All optional, read at build time. Set them in `.env.local` locally or as repository variables for CI. Anything unset is hidden; see `.env.example` for details.
+
+| Variable                                            | Effect                                                                                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_FORM_ENDPOINT`                         | Contact form POSTs JSON here (Formspree, or Web3Forms with `NEXT_PUBLIC_FORM_ACCESS_KEY`), with sending, success and error states. |
+| `NEXT_PUBLIC_CONTACT_EMAIL`                         | Email link; the form opens a mail draft when no endpoint is set, and offers email as the error fallback.                           |
+| `NEXT_PUBLIC_BOOKING_URL`                           | "Book a call" on the contact page and footer.                                                                                      |
+| `NEXT_PUBLIC_RESUME_URL`                            | "Download résumé" (a URL, or `/resume.pdf` from `public/`).                                                                        |
+| `NEXT_PUBLIC_GITHUB_URL`, `_LINKEDIN_URL`, `_X_URL` | Social icons.                                                                                                                      |
+| `NEXT_PUBLIC_SITE_URL`                              | Canonical URL for metadata, sitemap and JSON-LD (default: the GitHub Pages URL).                                                   |
+
+Contact-page content (availability badge, city and time zone for the local-time line, budget ranges, timelines, FAQ) lives as plain fields in `data/site.ts`; each is empty by default and its UI stays hidden until filled.
+
+With no endpoint and no email, the form saves the brief as a file on the visitor's device and says plainly that nothing was sent.
+
+Share images are generated at build time into `out/og/*.png` (one generic, one per project) by `app/og/[image]/route.tsx`; `sitemap.xml` and `robots.txt` come from `app/sitemap.ts` and `app/robots.ts`.
 
 ### Base path
 
@@ -100,7 +121,7 @@ GitHub Pages serves this repository from `/portfolio`. `next.config.ts` reads `P
 
 The four preview SVGs are original **illustrative interfaces**, visibly labelled as concept previews, and detail pages explain their status. Their sample readings are artwork, not real measurements. Replace them with authentic screenshots when available. Tags describe categories, not unverified technologies.
 
-Without `NEXT_PUBLIC_CONTACT_EMAIL`, the contact form downloads a text brief on the visitor's device and never claims to have sent anything.
+See [`docs/CONTENT_TODO.md`](docs/CONTENT_TODO.md) for the full list of owner-supplied content.
 
 Do not publish invented testimonials, client logos, statistics, repository links, or project outcomes.
 

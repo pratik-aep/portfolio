@@ -1,14 +1,27 @@
-/* Pinned 3D laptop story. Scroll length sets the pace of the sequence. */
+/* Pinned 3D laptop story. Scroll length sets the pace of the sequence.
+   The section is pulled up beneath the hero (--hero-h), so the pinned frame
+   is in place from the first pixel of scroll: the headline lifts away while
+   the laptop arrives. Layers, back to front:
+     .showcase-backdrop  sticky       studio gradient, beneath the hero
+     .hero               z-index 1    the opening headline
+     .showcase-sticky    z-index 2    laptop canvas and editorial overlays */
 .showcase,
 .showcase-placeholder {
   position: relative;
-  height: 360svh;
+  height: 400svh;
+  margin-top: calc(-1 * var(--hero-h));
 }
-.showcase-sticky {
+.showcase {
+  /* Written every frame by the render loop (LaptopShowcase onFrame). */
+  --enter: 0; /* scene furniture fades in as the hero leaves */
+  --exit: 0; /* overlays clear as the featured work takes over */
+  --focus: 0; /* background focus pull at the peak of the orbit */
+  --drift: 0; /* background parallax (px) following the camera arc */
+}
+.showcase-backdrop {
   position: sticky;
   top: 0;
   height: 100svh;
-  overflow: hidden;
   /* Light studio falloff behind the device; the page stays white. */
   background: radial-gradient(
     ellipse 64% 52% at 50% 60%,
@@ -16,25 +29,52 @@
     #f7f7f8 42%,
     #fff 74%
   );
+  opacity: var(--enter);
+  pointer-events: none;
+}
+.showcase-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 100svh;
+  /* Stack over the backdrop. (A negative margin-bottom on the backdrop
+     would keep it stuck over the next section for another screen.) */
+  margin-top: -100svh;
+  overflow: hidden;
+  /* The frame covers the hero while it is still readable: never block it. */
+  pointer-events: none;
 }
 .showcase-stage {
   position: absolute;
   inset: 0;
-}
-/* --exit (0→1) is set from the render loop during the final beat. The
-   laptop only dims a little; the editorial overlays clear completely. */
-.showcase {
-  --exit: 0;
 }
 .showcase-numeral,
 .showcase-trail,
 .showcase-callouts,
 .showcase-markers,
 .showcase-progress {
-  opacity: calc(1 - var(--exit));
+  opacity: calc(var(--enter) * (1 - var(--exit)));
 }
+.showcase-chapters,
+.showcase-note {
+  opacity: var(--enter);
+}
+/* The laptop only dims a little on the way out. */
 .showcase-canvas {
   opacity: calc(1 - var(--exit) * 0.2);
+}
+/* Camera: the background drifts with the arc and, on larger screens,
+   blurs with the focus pull while the laptop stays sharp. */
+.showcase-numeral,
+.showcase-trail {
+  translate: calc(var(--drift) * 1px) 0;
+}
+@media (min-width: 768px) {
+  .showcase-numeral,
+  .showcase-trail {
+    filter: blur(calc(var(--focus) * 6px));
+    will-change: filter, translate;
+  }
 }
 
 /* Background layers */
@@ -259,6 +299,17 @@
   color: var(--ink);
   border-color: var(--ink);
 }
+/* Hidden (and unclickable) behind the hero until the scene has entered,
+   but always reachable by keyboard. */
+.motion-toggle {
+  opacity: var(--enter);
+}
+.showcase[data-entered] .motion-toggle {
+  pointer-events: auto;
+}
+.motion-toggle:focus-visible {
+  opacity: 1;
+}
 .showcase-progress {
   position: absolute;
   left: 0;
@@ -271,19 +322,45 @@
 .showcase-progress span {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--accent);
   transform: scaleX(0);
   transform-origin: left;
 }
 
-/* Reduced motion / no WebGL: a single static composition. */
+/* Reduced motion / no WebGL: a single static composition in its own
+   section below the hero (no overlap). */
 .showcase.is-simplified {
+  --enter: 1;
   height: auto;
+  margin-top: 0;
+}
+.is-simplified .showcase-backdrop {
+  display: none;
 }
 .is-simplified .showcase-sticky {
   position: relative;
+  z-index: auto;
   height: min(100svh, 860px);
   min-height: 560px;
+  margin-top: 0;
+  background: radial-gradient(
+    ellipse 64% 52% at 50% 60%,
+    #eff0f2 0%,
+    #f7f7f8 42%,
+    #fff 74%
+  );
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Match the simplified layout from the first paint (no layout shift). */
+  .showcase,
+  .showcase-placeholder {
+    margin-top: 0;
+  }
+  .showcase-placeholder {
+    height: min(100svh, 860px);
+    min-height: 560px;
+  }
 }
 .static-laptop {
   position: absolute;
@@ -312,7 +389,7 @@
 @media (max-width: 1099px) {
   .showcase,
   .showcase-placeholder {
-    height: 320svh;
+    height: 360svh;
   }
   .callout-right {
     right: var(--gutter);
@@ -321,9 +398,10 @@
 @media (max-width: 767px) {
   .showcase,
   .showcase-placeholder {
-    height: 260svh;
+    height: 300svh;
   }
-  .showcase-sticky {
+  .showcase-backdrop,
+  .is-simplified .showcase-sticky {
     background: radial-gradient(
       ellipse 90% 40% at 50% 55%,
       #f0f1f3 0%,

@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import type { Metadata } from "next";
 import { projects } from "@/data/projects";
+import { shareMetadata } from "@/data/site";
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
@@ -10,10 +12,22 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   const p = projects.find((p) => p.slug === slug);
-  return { title: p?.title || "Project" };
+  if (!p) return { title: "Project" };
+  return {
+    title: p.title,
+    description: p.description,
+    ...shareMetadata({
+      path: `/projects/${p.slug}/`,
+      title: p.title,
+      description: p.description,
+      image: p.slug,
+      imageAlt: `${p.title}: ${p.short}`,
+      type: "article",
+    }),
+  };
 }
 export default async function ProjectPage({
   params,

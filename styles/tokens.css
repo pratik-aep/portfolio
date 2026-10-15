@@ -9,7 +9,41 @@
   --muted: #929292;
   --line: #e8e8e8;
   --line-strong: #d4d4d4;
-  --focus: #3d6f66;
+
+  /* Accent: one restrained colour for links, tag hovers, progress and
+     focus. Refined teal derived from the original focus colour.
+     Alternatives considered:
+       ink blue  #2f5d8a / soft #e8eff6 / on dark #8fb6dd
+       ember     #9a4a2f / soft #f6ebe6 / on dark #e0a48c
+     #2f6b61 on white is 6.2:1 (AA for body text). */
+  --accent: #2f6b61;
+  --accent-strong: #24564e;
+  --accent-soft: #e7f0ee;
+  --focus: var(--accent);
+
+  /* Dark surfaces (inverted sections) */
+  --surface-dark: #0e1011;
+  --surface-dark-raised: #181b1d;
+  --ink-inverse: #ffffff;
+  --text-inverse: #b4b9b8;
+  --muted-inverse: #7d8483;
+  --line-inverse: #2a2f31;
+  --accent-on-dark: #7cc2b4;
+
+  /* Feedback */
+  --danger: #b4372f;
+  --danger-soft: #fbefee;
+  --success: #2f9e6b;
+  --success-on-dark: #5fd39a;
+
+  /* Atmosphere: soft accent glow and hairline grid behind forms. */
+  --glow: color-mix(in srgb, var(--accent) 12%, transparent);
+  --grid-line: rgb(17 17 17 / 0.045);
+  --grid-size: 44px;
+
+  /* Typefaces: Inter for reading, mono for labels, tags and numerals. */
+  --font-body: Inter, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Type: fluid between a 375px and a 1440px viewport */
   --fs-hero: clamp(44px, 1.6rem + 5.4vw, 96px);
@@ -19,6 +53,8 @@
   --fs-body: clamp(15px, 0.85rem + 0.2vw, 17px);
   --fs-small: 13px;
   --fs-eyebrow: 11px;
+  --fs-mono: 12px;
+  --tracking-mono: 0.08em;
   --tracking-tight: -0.045em;
   --tracking-display: -0.055em;
 
@@ -29,6 +65,8 @@
   --radius: 18px;
   --radius-sm: 10px;
   --nav-height: 76px;
+  /* Opening frame height; the laptop scene is pulled up beneath it. */
+  --hero-h: max(640px, 100svh);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -38,6 +76,7 @@
 @media (max-width: 767px) {
   :root {
     --nav-height: 64px;
+    --hero-h: max(560px, 92svh);
     --radius: 14px;
   }
 }

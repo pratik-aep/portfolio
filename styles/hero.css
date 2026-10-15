@@ -1,13 +1,39 @@
-/* Opening frame: typography only, centred. */
+/* Opening frame: typography only, centred. It sits above the pinned laptop
+   scene's backdrop (z-index 1) and below the laptop itself, which arrives
+   as this block lifts away (see styles/showcase.css). */
 .hero {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: max(640px, 100svh);
+  min-height: var(--hero-h);
   padding-top: var(--nav-height);
   padding-bottom: 72px;
   text-align: center;
+}
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 30%;
+}
+/* Scroll target for the cue: 70% of the way through the hero, i.e. into
+   the laptop reveal. Offsets the page's scroll-padding. */
+.hero-anchor {
+  position: absolute;
+  top: calc(var(--hero-h) * 0.7 + var(--nav-height) + 24px);
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No overlap: land on the static showcase just below the hero. */
+  .hero-anchor {
+    top: calc(100% + 24px);
+  }
 }
 .hero-title {
   max-width: 1000px;
@@ -70,7 +96,6 @@
 
 @media (max-width: 767px) {
   .hero {
-    min-height: max(560px, 92svh);
     padding-bottom: 48px;
   }
   .hero-title {

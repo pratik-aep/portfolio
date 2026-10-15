@@ -34,8 +34,16 @@ export function Navbar() {
     (name === "Home" && pathname === "/") ||
     (name === "Projects" && pathname.startsWith("/projects")) ||
     (name === "Contact" && pathname.startsWith("/contact"));
+  // The contact page opens on a dark panel. Until the visitor scrolls (or
+  // opens the mobile menu) the bar goes transparent over it; see
+  // [data-surface="split"] in styles/nav.css.
+  const surface =
+    pathname.startsWith("/contact") && !scrolled && !open ? "split" : undefined;
   return (
-    <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
+    <header
+      className={`nav ${scrolled ? "nav-scrolled" : ""}`}
+      data-surface={surface}
+    >
       <div className="nav-inner">
         <Link
           href="/#main"
